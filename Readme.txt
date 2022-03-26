@@ -1,0 +1,1 @@
+# 拉取仓库后，先在项目跟目录创建一个kubeconfig目录，会用于存放kubeconfig认证时，落地客户端的kubeconfig文件
