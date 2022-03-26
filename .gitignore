@@ -6,7 +6,7 @@ __pycache__/
 *$py.class
 
 # kubernetes conf
-
+!kubeconfig
 # C extensions
 *.so
 
