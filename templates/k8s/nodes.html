@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}
+nodes
+{% endblock %}
+
+
+{% block nav-item-1 %}
+layui-nav-itemed
+{% endblock %}
+{% block nav-this-1-1 %}
+layui-this
+{% endblock %}
+
+
+
+{% block content %}
+    <span class="layui-breadcrumb">
+      <a href="#">首页</a>
+      <a href="#">Kubernetes</a>
+      <a><cite>Nodes</cite></a>
+    </span>
+    <hr>
+<div class="layui-card">
+    <div class="layui-card-body">
+
+        <div class="layui-row">
+            <div class="layui-col-md12">
+                <input type="text" name="search_name" class="layui-input" style="width: 150px;float: left">
+                <button class="layui-btn" style="float: left" id="searchBtn">搜索</button>
+            </div>
+            <div class="layui-col-md12">
+                <table class="layui-hide" id="test" lay-filter="test"></table>
+                <script type="text/html" id="barDemo">
+                  <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="yaml">YAML</a>
+                  <a class="layui-btn layui-btn-xs" lay-event="details">详情</a>
+                </script>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+{% block js %}
+<script>
+    layui.use('table', function () {
+        var table = layui.table;
+        var $ = layui.jquery;
+
+        table.render({
+            elem: '#test',
+            url: '{% url 'k8s:nodes_api' %}',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            title: 'node数据表',
+            cols: [[
+                {field: 'name', title: '名称', sort: true}
+                , {field: 'labels', title: '标签', templet: labelsFormat}
+                , {field: 'status', title: '准备就绪'}
+                , {field: 'scheduler', title: '可调度'}
+                , {field: 'cpu', title: 'CPU'}
+                , {field: 'memory', title: '内存'}
+                , {field: 'kebelet_version', title: 'kubelet版本'}
+                , {field: 'cri_version', title: 'CRI版本'}
+                , {field: 'create_time', title: '创建时间'}
+                , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150}
+            ]],
+            page: true,
+            id: 'nodetb'
+        });
+
+        function labelsFormat(d) {
+            result = "";
+            if (d.labels == null) {
+                return "None"
+            } else {
+                for (let key in d.labels) {
+                    result += '<span style="border:1px solid #d6e5ec;border-radius: 8px">' +
+                        key + ":" + d.labels[key] + "</span><br>"
+                }
+            }
+            return result
+        }
+
+        // 监听行工具栏的事件，即点击yaml或删除对应的事件处理函数
+        table.on('tool(test)', function (obj) {
+            var data = obj.data
+            if (obj.event == 'details') {
+                window.location.href = "{% url 'k8s:node_details' %}?node_name=" + data['name']
+                //    发起查询node详情的api请求，k8s.views中对应函数处理
+            } else if (obj.event == 'yaml') {
+                layer.open({
+                    'title': 'YAML',
+                    type: 2,
+                    area: ['50%', '60%'],
+                    content: "{% url 'ace_editor' %}?resource=node&" + "namespace=" + data['namespace'] + '&name=' + data['name'],
+                })
+            }
+        })
+
+            // 监听搜索按钮事件
+
+    $("#searchBtn").click(function () {
+                var search_key = $("input[name='search_name']").val();
+        table.reload('nodetb', {
+          where: { //设定异步数据接口的额外参数，任意设
+            search_key: search_key
+          }
+          ,page: {
+            curr: 1 //重新从第 1 页开始
+          }
+        }); //只重载数据
+    })
+
+
+    });
+</script>
+{% endblock %}
+
+
